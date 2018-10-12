@@ -104,9 +104,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var canvas = document.querySelector('canvas');
 var c = canvas.getContext('2d');
-
+var offset = { x: 0, y: 200 };
 canvas.width = innerWidth;
-canvas.height = innerHeight;
+canvas.height = innerHeight - offset.y;
 
 var mouse = {
     x: innerWidth / 2,
@@ -114,18 +114,39 @@ var mouse = {
 };
 
 var colors = ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66'];
-
+var selectedBlue = false;
+var stdRadius = 20;
 // Event Listeners
 addEventListener('mousemove', function (event) {
     mouse.x = event.clientX;
-    mouse.y = event.clientY;
+    mouse.y = event.clientY - offset.y;
+});
+
+addEventListener('click', function () {
+    dots.push(new Object(mouse.x, mouse.y, stdRadius, selectedBlue ? colors[1] : colors[3]));
 });
 
 addEventListener('resize', function () {
     canvas.width = innerWidth;
-    canvas.height = innerHeight;
+    canvas.height = innerHeight - offset.y;
+});
 
-    init();
+addEventListener('keydown', function (e) {
+    console.log(e.keyCode);
+    switch (e.keyCode) {
+        case 65:
+            // A
+            selectedBlue = !selectedBlue;
+            break;
+        case 67:
+            // C
+            console.log("Calculando...");
+            break;
+        case 85:
+            // U
+            dots.splice(dots.length - 1, 1);
+            break;
+    }
 });
 
 // Objects
@@ -139,7 +160,8 @@ function Object(x, y, radius, color) {
 Object.prototype.draw = function () {
     c.beginPath();
     c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-    c.fillStyle = this.color;
+    //c.fillStyle = this.color
+    c.fillStyle = this.y > _utils2.default.f(canvas.width, canvas.height, this.x) ? colors[1] : colors[3];
     c.fill();
     c.closePath();
 };
@@ -149,12 +171,12 @@ Object.prototype.update = function () {
 };
 
 // Implementation
-var objects = void 0;
+var dots = void 0;
 function init() {
-    objects = [];
+    dots = [];
 
-    for (var i = 0; i < 400; i++) {
-        // objects.push();
+    for (var i = 0; i < 100; i++) {
+        dots.push(new Object(_utils2.default.randomIntFromRange(0, canvas.width), _utils2.default.randomIntFromRange(0, canvas.height), _utils2.default.randomIntFromRange(20, 50), _utils2.default.randomColor(colors)));
     }
 }
 
@@ -163,10 +185,20 @@ function animate() {
     requestAnimationFrame(animate);
     c.clearRect(0, 0, canvas.width, canvas.height);
 
-    c.fillText('HTML CANVAS BOILERPLATE', mouse.x, mouse.y);
-    // objects.forEach(object => {
-    //  object.update();
-    // });
+    dots.forEach(function (dot) {
+        dot.update();
+    });
+    c.beginPath();
+    c.arc(mouse.x, mouse.y, 10, Math.PI * 2, false);
+    c.fillStyle = selectedBlue ? colors[1] : colors[3];
+    c.fill();
+
+    c.moveTo(0, 0);
+    for (var i = 0; i < canvas.width; i++) {
+        c.lineTo(i, _utils2.default.f(canvas.width, canvas.height, i));
+    }
+    c.stroke();
+    c.closePath();
 }
 
 init();
@@ -199,7 +231,14 @@ function distance(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
 }
 
-module.exports = { randomIntFromRange: randomIntFromRange, randomColor: randomColor, distance: distance };
+function f(width, height, x) {
+    var realX = x * 100 / width; // Normaliza de px a % (width->100%)
+    var realY = 100 - realX; // Este es el cálculo de la función
+    var y = realY * height / 100; // Retorna a px para display
+    return y;
+}
+
+module.exports = { randomIntFromRange: randomIntFromRange, randomColor: randomColor, distance: distance, f: f };
 
 /***/ })
 
