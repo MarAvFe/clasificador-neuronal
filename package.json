@@ -1,13 +1,13 @@
 {
-  "name": "canvas-template",
-  "version": "1.0.0",
+  "name": "tarea-clasificacion",
+  "version": "0.1.0",
   "description": "",
   "main": "webpack.config.js",
   "scripts": {
     "start": "webpack --config webpack.config.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["neural-network", "ai", "classification"],
   "author": "",
   "license": "ISC",
   "dependencies": {
