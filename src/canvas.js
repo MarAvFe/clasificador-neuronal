@@ -22,8 +22,8 @@ addEventListener('mousemove', event => {
 
 addEventListener('click', () => {
     dots.push(new Object(
-        mouse.x, 
-        mouse.y, 
+        mouse.x,
+        mouse.y,
         stdRadius,
         selectedBlue ? colors[1] : colors[3]
     ));
@@ -49,15 +49,81 @@ addEventListener('keydown', (e) => {
     }
 })
 
-// Objects
-function Object(x, y, radius, color) {
+// Perceptron
+function Perceptron(input_size) {
+    this.weights = (() => {
+        const zeroes = []
+        for (let i = 0; i < input_size; i++) {
+            zeroes.push(Math.random()*2-1)
+        }
+        return zeroes
+    })()
+    this.bias = Math.random()*2-1
+    console.dir(this)
+}
+
+Perceptron.prototype.heaviside = function(x) {
+    return x >= 0 ? 1 : 0
+}
+
+Perceptron.prototype.process = function(inputs) {
+    // inputs: int[]
+    let sum = this.bias
+    for (input of inputs) {
+        sum += input * this.weights[inputs.indexOf(input)]
+    }
+    return this.heaviside(sum)
+}
+
+Perceptron.prototype.adjust = function(inputs, delta, learningRate) {
+    // inputs: int[], delta: int, learningRate: int
+    for (input of inputs) {
+        this.weights[inputs.indexOf(input)] += input * delta * learningRate
+    }
+    this.bias += delta * learningRate
+}
+
+const a = 0;
+const b = 0;
+
+function f(x) {
+    // x: int
+    return ( a*x ) + b
+}
+
+function isAboveLine(point, f) {
+    // point: [int,int], f: function(int) int
+    const x = point[0]
+    const y = point[1]
+    return y > f(x) ? 1 : 0
+}
+
+function train(p, iters, rate) {
+    // p: Perceptron, iters: int, rate: intfloat
+    for (var i = 0; i < iters; i++) {
+        const point = [
+            utils.randomIntFromRange(-100,100),
+            utils.randomIntFromRange(-100,100)
+        ]
+
+        const actual = p.process(point)
+        const expected = isAboveLine(point, f)
+        const delta = expected - actual
+
+        p.adjust(point, delta, rate)
+    }
+}
+
+
+// Dots
+function Dot(x, y, radius, color) {
     this.x = x
     this.y = y
     this.radius = radius
     this.color = color
 }
 
-Object.prototype.draw = function() {
+Dot.prototype.draw = function() {
     c.beginPath()
     c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
     //c.fillStyle = this.color
@@ -66,7 +132,7 @@ Object.prototype.draw = function() {
     c.closePath()
 }
 
-Object.prototype.update = function() {
+Dot.prototype.update = function() {
     this.draw()
 }
 
@@ -74,15 +140,15 @@ Object.prototype.update = function() {
 let dots
 function init() {
     dots = []
-
     for (let i = 0; i < 100; i++) {
-        dots.push(new Object(
-            utils.randomIntFromRange(0, canvas.width), 
-            utils.randomIntFromRange(0, canvas.height), 
-            utils.randomIntFromRange(20, 50), 
+        dots.push(new Dot(
+            utils.randomIntFromRange(0, canvas.width),
+            utils.randomIntFromRange(0, canvas.height),
+            utils.randomIntFromRange(20, 50),
             utils.randomColor(colors)
         ));
     }
+    new Perceptron(5)
 }
 
 // Animation Loop

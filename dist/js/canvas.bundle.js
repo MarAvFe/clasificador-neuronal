@@ -149,15 +149,121 @@ addEventListener('keydown', function (e) {
     }
 });
 
-// Objects
-function Object(x, y, radius, color) {
+// Perceptron
+function Perceptron(input_size) {
+    this.weights = function () {
+        var zeroes = [];
+        for (var i = 0; i < input_size; i++) {
+            zeroes.push(Math.random() * 2 - 1);
+        }
+        return zeroes;
+    }();
+    this.bias = Math.random() * 2 - 1;
+    console.dir(this);
+}
+
+Perceptron.prototype.heaviside = function (x) {
+    return x >= 0 ? 1 : 0;
+};
+
+Perceptron.prototype.process = function (inputs) {
+    // inputs: int[]
+    var sum = this.bias;
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+        for (var _iterator = inputs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            input = _step.value;
+
+            sum += input * this.weights[inputs.indexOf(input)];
+        }
+    } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+                _iterator.return();
+            }
+        } finally {
+            if (_didIteratorError) {
+                throw _iteratorError;
+            }
+        }
+    }
+
+    return this.heaviside(sum);
+};
+
+Perceptron.prototype.adjust = function (inputs, delta, learningRate) {
+    // inputs: int[], delta: int, learningRate: int
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+        for (var _iterator2 = inputs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            input = _step2.value;
+
+            this.weights[inputs.indexOf(input)] += input * delta * learningRate;
+        }
+    } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
+            }
+        } finally {
+            if (_didIteratorError2) {
+                throw _iteratorError2;
+            }
+        }
+    }
+
+    this.bias += delta * learningRate;
+};
+
+var a = 0;
+var b = 0;
+
+function f(x) {
+    // x: int
+    return a * x + b;
+}
+
+function isAboveLine(point, f) {
+    // point: [int,int], f: function(int) int
+    var x = point[0];
+    var y = point[1];
+    return y > f(x) ? 1 : 0;
+}
+
+function train(p, iters, rate) {
+    // p: Perceptron, iters: int, rate: intfloat
+    for (var i = 0; i < iters; i++) {
+        var point = [_utils2.default.randomIntFromRange(-100, 100), _utils2.default.randomIntFromRange(-100, 100)];
+
+        var actual = p.process(point);
+        var expected = isAboveLine(point, f);
+        var delta = expected - actual;
+
+        p.adjust(point, delta, rate);
+    }
+}
+
+// Dots
+function Dot(x, y, radius, color) {
     this.x = x;
     this.y = y;
     this.radius = radius;
     this.color = color;
 }
 
-Object.prototype.draw = function () {
+Dot.prototype.draw = function () {
     c.beginPath();
     c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
     //c.fillStyle = this.color
@@ -166,7 +272,7 @@ Object.prototype.draw = function () {
     c.closePath();
 };
 
-Object.prototype.update = function () {
+Dot.prototype.update = function () {
     this.draw();
 };
 
@@ -174,10 +280,10 @@ Object.prototype.update = function () {
 var dots = void 0;
 function init() {
     dots = [];
-
     for (var i = 0; i < 100; i++) {
-        dots.push(new Object(_utils2.default.randomIntFromRange(0, canvas.width), _utils2.default.randomIntFromRange(0, canvas.height), _utils2.default.randomIntFromRange(20, 50), _utils2.default.randomColor(colors)));
+        dots.push(new Dot(_utils2.default.randomIntFromRange(0, canvas.width), _utils2.default.randomIntFromRange(0, canvas.height), _utils2.default.randomIntFromRange(20, 50), _utils2.default.randomColor(colors)));
     }
+    new Perceptron(5);
 }
 
 // Animation Loop
