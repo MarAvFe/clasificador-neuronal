@@ -21,7 +21,7 @@ addEventListener('mousemove', event => {
 })
 
 addEventListener('click', () => {
-    dots.push(new Object(
+    dots.push(new Dot(
         mouse.x,
         mouse.y,
         stdRadius,

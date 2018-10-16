@@ -123,7 +123,7 @@ addEventListener('mousemove', function (event) {
 });
 
 addEventListener('click', function () {
-    dots.push(new Object(mouse.x, mouse.y, stdRadius, selectedBlue ? colors[1] : colors[3]));
+    dots.push(new Dot(mouse.x, mouse.y, stdRadius, selectedBlue ? colors[1] : colors[3]));
 });
 
 addEventListener('resize', function () {
