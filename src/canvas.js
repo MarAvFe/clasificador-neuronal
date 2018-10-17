@@ -69,7 +69,7 @@ Perceptron.prototype.heaviside = function(x) {
 Perceptron.prototype.process = function(inputs) {
     // inputs: int[]
     let sum = this.bias
-    for (input of inputs) {
+    for (const input of inputs) {
         sum += input * this.weights[inputs.indexOf(input)]
     }
     return this.heaviside(sum)
@@ -77,14 +77,14 @@ Perceptron.prototype.process = function(inputs) {
 
 Perceptron.prototype.adjust = function(inputs, delta, learningRate) {
     // inputs: int[], delta: int, learningRate: int
-    for (input of inputs) {
+    for (const input of inputs) {
         this.weights[inputs.indexOf(input)] += input * delta * learningRate
     }
     this.bias += delta * learningRate
 }
 
-const a = 0;
-const b = 0;
+let a = 0;
+let b = 0;
 
 function f(x) {
     // x: int
@@ -98,12 +98,12 @@ function isAboveLine(point, f) {
     return y > f(x) ? 1 : 0
 }
 
-function train(p, iters, rate) {
+function train(p, iters, rate, dots) {
     // p: Perceptron, iters: int, rate: intfloat
-    for (var i = 0; i < iters; i++) {
+    for (var i = 0; i < dots.length; i++) {
         const point = [
-            utils.randomIntFromRange(-100,100),
-            utils.randomIntFromRange(-100,100)
+            dots[i].x, //utils.randomIntFromRange(-100,100),
+            dots[i].y  //utils.randomIntFromRange(-100,100)
         ]
 
         const actual = p.process(point)
@@ -112,6 +112,38 @@ function train(p, iters, rate) {
 
         p.adjust(point, delta, rate)
     }
+    a = p.weights[0]
+    b = p.weights[1]
+}
+
+function verify(p, dots) {
+    // p: Perceptron
+    let correctAnswers = 0
+    for (const dot of dots) {
+        const point = [dot.x, dot.y]
+        const result = p.process(point)
+        correctAnswers += result == isAboveLine(point, f) ? 1 : 0
+    }
+    console.log(`correctAnswers: ${correctAnswers}`)
+    return correctAnswers
+}
+
+function runNet(dots) {
+    a = utils.randomIntFromRange(-5,5)
+    b = utils.randomIntFromRange(-50,50)
+    console.log("vals",a,b)
+
+    let p = new Perceptron(2)
+
+    const iterations = 100
+    const learningRate = 0.2
+
+    console.log(p.weights)
+    train(p, iterations, learningRate, dots)
+    console.log(p.weights)
+
+    const successRate = verify(p, dots)
+    console.log("vals",a,b)
 }
 
 
@@ -119,7 +151,7 @@ function train(p, iters, rate) {
 function Dot(x, y, radius, color) {
     this.x = x
     this.y = y
-    this.radius = radius
+    this.radius = 20//radius
     this.color = color
 }
 
@@ -127,7 +159,7 @@ Dot.prototype.draw = function() {
     c.beginPath()
     c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
     //c.fillStyle = this.color
-    c.fillStyle = this.y > utils.f(canvas.width, canvas.height, this.x) ? colors[1] : colors[3];
+    c.fillStyle = this.y > utils.f(canvas.width, canvas.height, this.x, 1, 2) ? colors[1] : colors[3];
     c.fill()
     c.closePath()
 }
@@ -148,7 +180,7 @@ function init() {
             utils.randomColor(colors)
         ));
     }
-    new Perceptron(5)
+    runNet(dots)
 }
 
 // Animation Loop
@@ -166,7 +198,7 @@ function animate() {
 
     c.moveTo(0,0)
     for (let i = 0; i < canvas.width; i++) {
-        c.lineTo( i, utils.f(canvas.width, canvas.height, i) );
+        c.lineTo( i, utils.f(canvas.width, canvas.height, f(i), 3, 5) );
     }
     c.stroke()
     c.closePath()

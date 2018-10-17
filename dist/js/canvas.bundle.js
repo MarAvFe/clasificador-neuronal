@@ -175,7 +175,7 @@ Perceptron.prototype.process = function (inputs) {
 
     try {
         for (var _iterator = inputs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            input = _step.value;
+            var input = _step.value;
 
             sum += input * this.weights[inputs.indexOf(input)];
         }
@@ -205,7 +205,7 @@ Perceptron.prototype.adjust = function (inputs, delta, learningRate) {
 
     try {
         for (var _iterator2 = inputs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            input = _step2.value;
+            var input = _step2.value;
 
             this.weights[inputs.indexOf(input)] += input * delta * learningRate;
         }
@@ -242,10 +242,12 @@ function isAboveLine(point, f) {
     return y > f(x) ? 1 : 0;
 }
 
-function train(p, iters, rate) {
+function train(p, iters, rate, dots) {
     // p: Perceptron, iters: int, rate: intfloat
-    for (var i = 0; i < iters; i++) {
-        var point = [_utils2.default.randomIntFromRange(-100, 100), _utils2.default.randomIntFromRange(-100, 100)];
+    for (var i = 0; i < dots.length; i++) {
+        var point = [dots[i].x, //utils.randomIntFromRange(-100,100),
+        dots[i].y //utils.randomIntFromRange(-100,100)
+        ];
 
         var actual = p.process(point);
         var expected = isAboveLine(point, f);
@@ -253,13 +255,67 @@ function train(p, iters, rate) {
 
         p.adjust(point, delta, rate);
     }
+    a = p.weights[0];
+    b = p.weights[1];
+}
+
+function verify(p, dots) {
+    // p: Perceptron
+    var correctAnswers = 0;
+    var _iteratorNormalCompletion3 = true;
+    var _didIteratorError3 = false;
+    var _iteratorError3 = undefined;
+
+    try {
+        for (var _iterator3 = dots[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var dot = _step3.value;
+
+            var point = [dot.x, dot.y];
+            var result = p.process(point);
+            correctAnswers += result == isAboveLine(point, f) ? 1 : 0;
+        }
+    } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                _iterator3.return();
+            }
+        } finally {
+            if (_didIteratorError3) {
+                throw _iteratorError3;
+            }
+        }
+    }
+
+    console.log('correctAnswers: ' + correctAnswers);
+    return correctAnswers;
+}
+
+function runNet(dots) {
+    a = _utils2.default.randomIntFromRange(-5, 5);
+    b = _utils2.default.randomIntFromRange(-50, 50);
+    console.log("vals", a, b);
+
+    var p = new Perceptron(2);
+
+    var iterations = 100;
+    var learningRate = 0.2;
+
+    console.log(p.weights);
+    train(p, iterations, learningRate, dots);
+    console.log(p.weights);
+
+    var successRate = verify(p, dots);
+    console.log("vals", a, b);
 }
 
 // Dots
 function Dot(x, y, radius, color) {
     this.x = x;
     this.y = y;
-    this.radius = radius;
+    this.radius = 20; //radius
     this.color = color;
 }
 
@@ -267,7 +323,7 @@ Dot.prototype.draw = function () {
     c.beginPath();
     c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
     //c.fillStyle = this.color
-    c.fillStyle = this.y > _utils2.default.f(canvas.width, canvas.height, this.x) ? colors[1] : colors[3];
+    c.fillStyle = this.y > _utils2.default.f(canvas.width, canvas.height, this.x, 1, 2) ? colors[1] : colors[3];
     c.fill();
     c.closePath();
 };
@@ -283,7 +339,7 @@ function init() {
     for (var i = 0; i < 100; i++) {
         dots.push(new Dot(_utils2.default.randomIntFromRange(0, canvas.width), _utils2.default.randomIntFromRange(0, canvas.height), _utils2.default.randomIntFromRange(20, 50), _utils2.default.randomColor(colors)));
     }
-    new Perceptron(5);
+    runNet(dots);
 }
 
 // Animation Loop
@@ -301,7 +357,7 @@ function animate() {
 
     c.moveTo(0, 0);
     for (var i = 0; i < canvas.width; i++) {
-        c.lineTo(i, _utils2.default.f(canvas.width, canvas.height, i));
+        c.lineTo(i, _utils2.default.f(canvas.width, canvas.height, f(i), 3, 5));
     }
     c.stroke();
     c.closePath();
@@ -337,9 +393,9 @@ function distance(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
 }
 
-function f(width, height, x) {
+function f(width, height, x, m, b) {
     var realX = x * 100 / width; // Normaliza de px a % (width->100%)
-    var realY = 100 - realX; // Este es el cálculo de la función
+    var realY = m * realX + b; // Este es el cálculo de la función
     var y = realY * height / 100; // Retorna a px para display
     return y;
 }
