@@ -11,7 +11,7 @@ const mouse = {
     y: innerHeight / 2
 }
 
-const colors = ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66']
+const colors = ['#7ECEFD', '#FF7F66'] // ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66']
 let selectedBlue = false;
 let stdRadius = 20;
 // Event Listeners
@@ -95,7 +95,7 @@ function isAboveLine(point, f) {
     // point: [int,int], f: function(int) int
     const x = point[0]
     const y = point[1]
-    return y > f(x) ? 1 : 0
+    return y > utils.f(canvas.width, canvas.height, x) ? 1 : 0
 }
 
 function train(p, iters, rate, dots) {
@@ -151,15 +151,15 @@ function runNet(dots) {
 function Dot(x, y, radius, color) {
     this.x = x
     this.y = y
-    this.radius = 20//radius
+    this.radius = radius
     this.color = color
 }
 
 Dot.prototype.draw = function() {
     c.beginPath()
     c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-    //c.fillStyle = this.color
-    c.fillStyle = this.y > utils.f(canvas.width, canvas.height, this.x, 1, 2) ? colors[1] : colors[3];
+    this.color = this.y > utils.f(canvas.width, canvas.height, this.x) ? colors[0] : colors[1];
+    c.fillStyle = this.color
     c.fill()
     c.closePath()
 }
@@ -176,7 +176,7 @@ function init() {
         dots.push(new Dot(
             utils.randomIntFromRange(0, canvas.width),
             utils.randomIntFromRange(0, canvas.height),
-            utils.randomIntFromRange(20, 50),
+            utils.randomIntFromRange(5, 18),
             utils.randomColor(colors)
         ));
     }

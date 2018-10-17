@@ -113,7 +113,7 @@ var mouse = {
     y: innerHeight / 2
 };
 
-var colors = ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66'];
+var colors = ['#7ECEFD', '#FF7F66']; // ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66']
 var selectedBlue = false;
 var stdRadius = 20;
 // Event Listeners
@@ -239,7 +239,7 @@ function isAboveLine(point, f) {
     // point: [int,int], f: function(int) int
     var x = point[0];
     var y = point[1];
-    return y > f(x) ? 1 : 0;
+    return y > _utils2.default.f(canvas.width, canvas.height, x) ? 1 : 0;
 }
 
 function train(p, iters, rate, dots) {
@@ -315,15 +315,15 @@ function runNet(dots) {
 function Dot(x, y, radius, color) {
     this.x = x;
     this.y = y;
-    this.radius = 20; //radius
+    this.radius = radius;
     this.color = color;
 }
 
 Dot.prototype.draw = function () {
     c.beginPath();
     c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-    //c.fillStyle = this.color
-    c.fillStyle = this.y > _utils2.default.f(canvas.width, canvas.height, this.x, 1, 2) ? colors[1] : colors[3];
+    this.color = this.y > _utils2.default.f(canvas.width, canvas.height, this.x) ? colors[0] : colors[1];
+    c.fillStyle = this.color;
     c.fill();
     c.closePath();
 };
@@ -337,7 +337,7 @@ var dots = void 0;
 function init() {
     dots = [];
     for (var i = 0; i < 100; i++) {
-        dots.push(new Dot(_utils2.default.randomIntFromRange(0, canvas.width), _utils2.default.randomIntFromRange(0, canvas.height), _utils2.default.randomIntFromRange(20, 50), _utils2.default.randomColor(colors)));
+        dots.push(new Dot(_utils2.default.randomIntFromRange(0, canvas.width), _utils2.default.randomIntFromRange(0, canvas.height), _utils2.default.randomIntFromRange(5, 18), _utils2.default.randomColor(colors)));
     }
     runNet(dots);
 }
@@ -395,7 +395,7 @@ function distance(x1, y1, x2, y2) {
 
 function f(width, height, x, m, b) {
     var realX = x * 100 / width; // Normaliza de px a % (width->100%)
-    var realY = m * realX + b; // Este es el cálculo de la función
+    var realY = 100 - realX; // Este es el cálculo de la función
     var y = realY * height / 100; // Retorna a px para display
     return y;
 }

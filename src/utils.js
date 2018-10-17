@@ -15,7 +15,7 @@ function distance(x1, y1, x2, y2) {
 
 function f(width, height, x, m, b) {
     const realX = (x * 100) / width  // Normaliza de px a % (width->100%)
-    const realY = (m*realX) + b  // Este es el cálculo de la función
+    const realY = 100 - realX  // Este es el cálculo de la función
     const y = (realY * height) / 100  // Retorna a px para display
     return y
 }
