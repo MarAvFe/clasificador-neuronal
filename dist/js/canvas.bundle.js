@@ -102,6 +102,7 @@ var _utils2 = _interopRequireDefault(_utils);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var fps = 5;
 var canvas = document.querySelector('canvas');
 var c = canvas.getContext('2d');
 var offset = { x: 0, y: 200 };
@@ -239,29 +240,11 @@ function isAboveLine(point, f) {
     // point: [int,int], f: function(int) int
     var x = point[0];
     var y = point[1];
-    return y > _utils2.default.f(canvas.width, canvas.height, x) ? 1 : 0;
+    return y > f(canvas.width, canvas.height, x) ? 1 : 0;
 }
 
-function train(p, iters, rate, dots) {
+function train(p, dots, rate) {
     // p: Perceptron, iters: int, rate: intfloat
-    for (var i = 0; i < dots.length; i++) {
-        var point = [dots[i].x, //utils.randomIntFromRange(-100,100),
-        dots[i].y //utils.randomIntFromRange(-100,100)
-        ];
-
-        var actual = p.process(point);
-        var expected = isAboveLine(point, f);
-        var delta = expected - actual;
-
-        p.adjust(point, delta, rate);
-    }
-    a = p.weights[0];
-    b = p.weights[1];
-}
-
-function verify(p, dots) {
-    // p: Perceptron
-    var correctAnswers = 0;
     var _iteratorNormalCompletion3 = true;
     var _didIteratorError3 = false;
     var _iteratorError3 = undefined;
@@ -271,8 +254,13 @@ function verify(p, dots) {
             var dot = _step3.value;
 
             var point = [dot.x, dot.y];
-            var result = p.process(point);
-            correctAnswers += result == isAboveLine(point, f) ? 1 : 0;
+
+            var actual = p.process(point);
+            //const expected = isAboveLine(dot, utils.f)
+            var expected = dot.color == colors[0] ? 1 : 0;
+            var delta = expected - actual;
+
+            p.adjust(point, delta, rate);
         }
     } catch (err) {
         _didIteratorError3 = true;
@@ -288,10 +276,44 @@ function verify(p, dots) {
             }
         }
     }
+}
+
+function verify(p, dots) {
+    // p: Perceptron
+    var correctAnswers = 0;
+    var _iteratorNormalCompletion4 = true;
+    var _didIteratorError4 = false;
+    var _iteratorError4 = undefined;
+
+    try {
+        for (var _iterator4 = dots[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var dot = _step4.value;
+
+            var point = [dot.x, dot.y];
+            var result = p.process(point);
+            correctAnswers += result == isAboveLine(point, f) ? 1 : 0;
+        }
+    } catch (err) {
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                _iterator4.return();
+            }
+        } finally {
+            if (_didIteratorError4) {
+                throw _iteratorError4;
+            }
+        }
+    }
 
     console.log('correctAnswers: ' + correctAnswers);
     return correctAnswers;
 }
+
+var thaM = void 0;
+var thaB = void 0;
 
 function runNet(dots) {
     a = _utils2.default.randomIntFromRange(-5, 5);
@@ -299,16 +321,15 @@ function runNet(dots) {
     console.log("vals", a, b);
 
     var p = new Perceptron(2);
+    var learningRate = 0.1;
 
-    var iterations = 100;
-    var learningRate = 0.2;
-
-    console.log(p.weights);
-    train(p, iterations, learningRate, dots);
-    console.log(p.weights);
+    console.log('p.weights: ' + p.weights);
+    train(p, dots, learningRate);
+    console.log('p.weights: ' + p.weights);
+    thaM = p.weights[0];
+    thaB = p.weights[1];
 
     var successRate = verify(p, dots);
-    console.log("vals", a, b);
 }
 
 // Dots
@@ -336,31 +357,63 @@ Dot.prototype.update = function () {
 var dots = void 0;
 function init() {
     dots = [];
-    for (var i = 0; i < 100; i++) {
+    for (var _i = 0; _i < 100; _i++) {
         dots.push(new Dot(_utils2.default.randomIntFromRange(0, canvas.width), _utils2.default.randomIntFromRange(0, canvas.height), _utils2.default.randomIntFromRange(5, 18), _utils2.default.randomColor(colors)));
     }
     runNet(dots);
+    console.log("ajustada(pix)");
+
+    for (var i = 0; i < canvas.width; i += 50) {
+        //console.log(i, ":", canvas.height-ajustada(i))
+    }
+}
+
+function g(x) {
+    return thaM * x + thaB;
+}
+
+function ajustada(x) {
+    var p = g(x) * 100 / g(canvas.width) / 100;
+    return canvas.height * p;
 }
 
 // Animation Loop
 function animate() {
-    requestAnimationFrame(animate);
-    c.clearRect(0, 0, canvas.width, canvas.height);
+    setTimeout(function () {
+        requestAnimationFrame(animate);
+        c.clearRect(0, 0, canvas.width, canvas.height);
 
-    dots.forEach(function (dot) {
-        dot.update();
-    });
-    c.beginPath();
-    c.arc(mouse.x, mouse.y, 10, Math.PI * 2, false);
-    c.fillStyle = selectedBlue ? colors[1] : colors[3];
-    c.fill();
+        dots.forEach(function (dot) {
+            dot.update();
+        });
+        c.beginPath();
+        c.arc(mouse.x, mouse.y, 10, Math.PI * 2, false);
+        c.fillStyle = selectedBlue ? colors[1] : colors[3];
+        c.fill();
 
-    c.moveTo(0, 0);
-    for (var i = 0; i < canvas.width; i++) {
-        c.lineTo(i, _utils2.default.f(canvas.width, canvas.height, f(i), 3, 5));
-    }
-    c.stroke();
-    c.closePath();
+        c.lineWidth = 10;
+        c.strokeStyle = "#FF0000";
+        c.globalAlpha = 0.2;
+        c.moveTo(0, _utils2.default.f(canvas.width, canvas.height, 0));
+        for (var i = 0; i < canvas.width; i++) {
+            c.lineTo(i, _utils2.default.f(canvas.width, canvas.height, i));
+        }
+        c.stroke();
+        c.closePath();
+
+        c.lineWidth = 1;
+        c.strokeStyle = "#000000";
+        c.globalAlpha = 1;
+        c.moveTo(0, ajustada(0));
+        for (var _i2 = 0; _i2 < canvas.width; _i2 += 100) {
+            c.lineTo(_i2, canvas.height - ajustada(_i2));
+        }
+        c.stroke();
+
+        c.strokeStyle = null;
+        c.lineWidth = 0;
+        c.closePath();
+    }, 1000 / fps);
 }
 
 init();
@@ -393,7 +446,7 @@ function distance(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
 }
 
-function f(width, height, x, m, b) {
+function f(width, height, x) {
     var realX = x * 100 / width; // Normaliza de px a % (width->100%)
     var realY = 100 - realX; // Este es el cálculo de la función
     var y = realY * height / 100; // Retorna a px para display

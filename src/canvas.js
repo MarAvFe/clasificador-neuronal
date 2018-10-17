@@ -1,5 +1,6 @@
 import utils from './utils'
 
+const fps = 5
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 const offset = { x: 0, y: 200 }
@@ -95,25 +96,21 @@ function isAboveLine(point, f) {
     // point: [int,int], f: function(int) int
     const x = point[0]
     const y = point[1]
-    return y > utils.f(canvas.width, canvas.height, x) ? 1 : 0
+    return y > f(canvas.width, canvas.height, x) ? 1 : 0
 }
 
-function train(p, iters, rate, dots) {
+function train(p, dots, rate) {
     // p: Perceptron, iters: int, rate: intfloat
-    for (var i = 0; i < dots.length; i++) {
-        const point = [
-            dots[i].x, //utils.randomIntFromRange(-100,100),
-            dots[i].y  //utils.randomIntFromRange(-100,100)
-        ]
+    for (const dot of dots) {
+        const point = [ dot.x, dot.y ]
 
         const actual = p.process(point)
-        const expected = isAboveLine(point, f)
+        //const expected = isAboveLine(dot, utils.f)
+        const expected = (dot.color == colors[0]) ? 1 : 0
         const delta = expected - actual
 
         p.adjust(point, delta, rate)
     }
-    a = p.weights[0]
-    b = p.weights[1]
 }
 
 function verify(p, dots) {
@@ -128,22 +125,25 @@ function verify(p, dots) {
     return correctAnswers
 }
 
+let thaM;
+let thaB;
+
 function runNet(dots) {
     a = utils.randomIntFromRange(-5,5)
     b = utils.randomIntFromRange(-50,50)
     console.log("vals",a,b)
 
     let p = new Perceptron(2)
+    const learningRate = 0.1
 
-    const iterations = 100
-    const learningRate = 0.2
 
-    console.log(p.weights)
-    train(p, iterations, learningRate, dots)
-    console.log(p.weights)
+    console.log(`p.weights: ${p.weights}`)
+    train(p, dots, learningRate)
+    console.log(`p.weights: ${p.weights}`)
+    thaM = p.weights[0]
+    thaB = p.weights[1]
 
     const successRate = verify(p, dots)
-    console.log("vals",a,b)
 }
 
 
@@ -181,27 +181,59 @@ function init() {
         ));
     }
     runNet(dots)
+    console.log("ajustada(pix)")
+
+    for (var i = 0; i < canvas.width; i+=50) {
+        //console.log(i, ":", canvas.height-ajustada(i))
+    }
+}
+
+function g(x) {
+    return (thaM*x) + thaB
+}
+
+function ajustada(x){
+    const p = ((g(x) * 100) / g(canvas.width))/100
+    return canvas.height * p
 }
 
 // Animation Loop
 function animate() {
-    requestAnimationFrame(animate)
-    c.clearRect(0, 0, canvas.width, canvas.height)
+    setTimeout( () => {
+        requestAnimationFrame(animate)
+        c.clearRect(0, 0, canvas.width, canvas.height)
 
-    dots.forEach(dot => {
-      dot.update();
-    });
-    c.beginPath()
-    c.arc(mouse.x, mouse.y, 10, Math.PI*2, false)
-    c.fillStyle = selectedBlue ? colors[1] : colors[3];
-    c.fill()
+        dots.forEach(dot => {
+            dot.update();
+        });
+        c.beginPath()
+        c.arc(mouse.x, mouse.y, 10, Math.PI*2, false)
+        c.fillStyle = selectedBlue ? colors[1] : colors[3];
+        c.fill()
 
-    c.moveTo(0,0)
-    for (let i = 0; i < canvas.width; i++) {
-        c.lineTo( i, utils.f(canvas.width, canvas.height, f(i), 3, 5) );
-    }
-    c.stroke()
-    c.closePath()
+        c.lineWidth = 10
+        c.strokeStyle = "#FF0000"
+        c.globalAlpha = 0.2
+        c.moveTo(0, utils.f(canvas.width, canvas.height, 0))
+        for (let i = 0; i < canvas.width; i++) {
+            c.lineTo( i, utils.f(canvas.width, canvas.height, i) );
+        }
+        c.stroke()
+        c.closePath()
+
+        c.lineWidth = 1
+        c.strokeStyle = "#000000"
+        c.globalAlpha = 1
+        c.moveTo(0, ajustada(0))
+        for (let i = 0; i < canvas.width; i+=100) {
+            c.lineTo( i, canvas.height-ajustada(i) );
+        }
+        c.stroke()
+
+        c.strokeStyle = null
+        c.lineWidth = 0
+        c.closePath()
+    }, 1000/fps )
 }
 
 init()
